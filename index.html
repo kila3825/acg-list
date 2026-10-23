@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>我的 ACG 與閱讀作品庫</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+  <style>
+    body { background-color: #0f172a; color: #f8fafc; }
+  </style>
+</head>
+<body class="p-4 md:p-8 max-w-7xl mx-auto">
+
+  <header class="mb-8 text-center md:text-left flex flex-col md:flex-row justify-between items-center gap-4">
+    <div>
+      <h1 class="text-3xl font-bold text-purple-400">📚 ACG 與閱讀庫</h1>
+      <p class="text-slate-400 text-sm mt-1">Google Sheets 即時同步線上版</p>
+    </div>
+    <input type="text" id="searchInput" placeholder="🔍 搜尋作品名稱、狀態或備註..." 
+           class="w-full md:w-80 px-4 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-purple-500">
+  </header>
+
+  <div id="tabs" class="flex flex-wrap gap-2 mb-6 border-b border-slate-800 pb-4">
+    <button onclick="filterTab('ALL')" class="tab-btn px-4 py-2 rounded-lg bg-purple-600 text-white font-medium">全部</button>
+    <button onclick="filterTab('1.動漫')" class="tab-btn px-4 py-2 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700">1. 動漫</button>
+    <button onclick="filterTab('2.漫畫分區')" class="tab-btn px-4 py-2 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700">2. 漫畫</button>
+    <button onclick="filterTab('3.輕小說分區')" class="tab-btn px-4 py-2 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700">3. 輕小說</button>
+    <button onclick="filterTab('4.書')" class="tab-btn px-4 py-2 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700">4. 書籍</button>
+    <button onclick="filterTab('5.影集')" class="tab-btn px-4 py-2 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700">5. 影集</button>
+    <button onclick="filterTab('6.綜藝')" class="tab-btn px-4 py-2 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700">6. 綜藝</button>
+  </div>
+
+  <div class="text-sm text-slate-400 mb-4" id="stats">⏳ 資料載入中...</div>
+
+  <div id="cardGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
+
+  <script>
+    // ⚠️ 替換成在 Google Sheets「檔案」➔「發布到 Web」取得的 CSV 網址
+    const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vT_YOUR_ID/pub?gid=0&single=true&output=csv';
+
+    let allData = [];
+    let currentTab = 'ALL';
+
+    function loadData() {
+      Papa.parse(csvUrl, {
+        download: true,
+        header: true,
+        skipEmptyLines: true,
+        complete: function(results) {
+          if (results.data && results.data.length > 0) {
+            allData = results.data;
+            document.getElementById('stats').innerText = `✅ 成功載入 ${allData.length} 項作品`;
+            renderCards();
+          } else {
+            document.getElementById('stats').innerHTML = '<span class="text-yellow-400">⚠️ 請確認 Google Sheets 是否已開放公開檢視。</span>';
+          }
+        },
+        error: function(err) {
+          document.getElementById('stats').innerHTML = '<span class="text-red-400">❌ 讀取失敗，請檢查 CSV 網址。</span>';
+        }
+      });
+    }
+
+    function renderCards() {
+      const grid = document.getElementById('cardGrid');
+      const search = document.getElementById('searchInput').value.toLowerCase().trim();
+      grid.innerHTML = '';
+
+      const filtered = allData.filter(item => {
+        const mainCat = item['主分區'] || item['﻿主分區'] || '';
+        const name = item['類別'] || item['名稱'] || '';
+        const note = item['進度/備註'] || '';
+        const subStatus = item['子狀態/細項'] || item['狀態/分區'] || '';
+
+        const matchTab = currentTab === 'ALL' || mainCat.includes(currentTab);
+        const matchSearch = name.toLowerCase().includes(search) || 
+                            note.toLowerCase().includes(search) || 
+                            subStatus.toLowerCase().includes(search);
+        return matchTab && matchSearch;
+      });
+
+      document.getElementById('stats').innerText = `共顯示 ${filtered.length} 項作品（總計 ${allData.length} 項）`;
+
+      filtered.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'bg-slate-800 border border-slate-700/60 p-4 rounded-xl flex flex-col justify-between hover:border-purple-500/50 transition-all shadow-lg';
+
+        const name = item['類別'] || item['名稱'] || '未命名作品';
+        const subStatus = item['子狀態/細項'] || item['狀態/分區'] || '未分類';
+        const note = item['進度/備註'] || '';
+        const mainCat = item['主分區'] || '';
+        const date = item['看完或記錄日期/備註'] || '';
+        const isHeart = name.includes('💓') || note.includes('💓') || date.includes('💓');
+
+        card.innerHTML = `
+          <div>
+            <div class="flex justify-between items-start mb-2">
+              <span class="text-xs px-2 py-1 rounded bg-purple-900/60 text-purple-300 font-semibold">${subStatus}</span>
+              ${isHeart ? '<span class="text-red-400 text-sm">💓</span>' : ''}
+            </div>
+            <h3 class="font-bold text-lg text-slate-100 mb-1">${name}</h3>
+            <p class="text-sm text-slate-400 mb-3">${note}</p>
+          </div>
+          <div class="text-xs text-slate-500 pt-2 border-t border-slate-700/40 flex justify-between">
+            <span>${mainCat}</span>
+            <span>${date}</span>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function filterTab(tabName) {
+      currentTab = tabName;
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        if (btn.innerText.includes(tabName) || (tabName === 'ALL' && btn.innerText === '全部')) {
+          btn.className = 'tab-btn px-4 py-2 rounded-lg bg-purple-600 text-white font-medium';
+        } else {
+          btn.className = 'tab-btn px-4 py-2 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700';
+        }
+      });
+      renderCards();
+    }
+
+    document.getElementById('searchInput').addEventListener('input', renderCards);
+    loadData();
+  </script>
+</body>
+</html>
