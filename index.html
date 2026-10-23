@@ -36,7 +36,6 @@
   <div id="cardGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
 
 <script>
-    // 你的 Google Sheets CSV API 網址
     const csvUrl = 'https://docs.google.com/spreadsheets/d/1lpcVN8vFuUq9rfLA-vv3d1MR90LcD98eOhINLuzpNa4/gviz/tq?tqx=out:csv';
 
     let allData = [];
@@ -68,16 +67,19 @@
       grid.innerHTML = '';
 
       const filtered = allData.filter(item => {
-        // 欄位對應：相容不同欄位名稱
         const mainCat = item['主分區'] || item['﻿主分區'] || '';
-        const title = item['類別'] || item['名稱'] || item['作品名稱'] || '';
-        const subStatus = item['子狀態/細項'] || item['狀態/分區'] || item['狀態'] || '';
+        
+        // 【修正 1】作品名稱主要取『子狀態/細項』欄位，如果沒有才取『類別』或『名稱』
+        const title = item['子狀態/細項'] || item['名稱'] || item['作品名稱'] || item['類別'] || '';
+        
+        // 【修正 2】小標籤取『狀態/分區』或『狀態』
+        const statusTag = item['狀態/分區'] || item['狀態'] || '';
         const note = item['進度/備註'] || item['備註'] || '';
 
         const matchTab = currentTab === 'ALL' || mainCat.includes(currentTab);
         const matchSearch = title.toLowerCase().includes(search) || 
                             note.toLowerCase().includes(search) || 
-                            subStatus.toLowerCase().includes(search);
+                            statusTag.toLowerCase().includes(search);
         return matchTab && matchSearch;
       });
 
@@ -87,25 +89,25 @@
         const card = document.createElement('div');
         card.className = 'bg-slate-800 border border-slate-700/60 p-4 rounded-xl flex flex-col justify-between hover:border-purple-500/50 transition-all shadow-lg';
 
-        // 1. 作品名稱（大字體）
-        const title = item['類別'] || item['名稱'] || item['作品名稱'] || '無名稱作品';
+        // 1. 作品名稱（主要抓原本試算表的『子狀態/細項』）
+        const title = item['子狀態/細項'] || item['名稱'] || item['作品名稱'] || item['類別'] || '無名稱作品';
         
-        // 2. 子狀態/細項標籤（紫色小標籤）
-        const subStatus = item['子狀態/細項'] || item['狀態/分區'] || item['狀態'] || '';
+        // 2. 紫色小標籤（抓原本試算表的『狀態/分區』，例如：正在看、看完結局）
+        const statusTag = item['狀態/分區'] || item['狀態'] || '';
         
-        // 3. 進度/備註
+        // 3. 進度與備註
         const note = item['進度/備註'] || item['備註'] || '';
         
-        // 4. 主分區與日期
+        // 4. 底部資訊（主分區與日期）
         const mainCat = item['主分區'] || '';
         const date = item['看完或記錄日期/備註'] || '';
 
-        // 是否為心頭好
+        // 心頭好標記
         const isHeart = title.includes('💓') || note.includes('💓') || date.includes('💓');
 
-        // 生成標籤 HTML：如果 subStatus 沒有資料就不顯示紫色標籤
-        const tagHtml = subStatus && subStatus.trim() !== '' 
-          ? `<span class="text-xs px-2 py-1 rounded bg-purple-900/60 text-purple-300 font-semibold inline-block mb-2">${subStatus}</span>` 
+        // 紫色小標籤：若 statusTag 為空則完全不顯示 HTML
+        const tagHtml = (statusTag && statusTag.trim() !== '') 
+          ? `<span class="text-xs px-2 py-1 rounded bg-purple-900/60 text-purple-300 font-semibold inline-block mb-2">${statusTag}</span>` 
           : '';
 
         card.innerHTML = `
@@ -114,9 +116,9 @@
               <div>${tagHtml}</div>
               ${isHeart ? '<span class="text-red-400 text-sm">💓</span>' : ''}
             </div>
-            <!-- 作品名稱放大呈現 -->
+            <!-- 作品名稱：大字體呈現 -->
             <h3 class="font-bold text-xl text-slate-100 mb-2 leading-snug">${title}</h3>
-            <!-- 進度/備註 -->
+            <!-- 進度/備註：次要字體 -->
             ${note ? `<p class="text-sm text-slate-400 mb-3">${note}</p>` : ''}
           </div>
           <div class="text-xs text-slate-500 pt-2 border-t border-slate-700/40 flex justify-between">
