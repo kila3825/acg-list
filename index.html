@@ -25,16 +25,26 @@
            class="w-full md:w-80 px-4 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-purple-500 shadow-inner">
   </header>
 
-  <!-- 狀態分類篩選列 -->
+  <!-- 分類篩選列（包含 6 大主分區與狀態/心頭好） -->
   <div id="tabs" class="flex flex-wrap gap-2 mb-6 border-b border-slate-800 pb-4">
     <button onclick="filterTab('ALL')" class="tab-btn tab-active px-3.5 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 text-sm transition-all">🌟 全部</button>
-    <button onclick="filterTab('HEART')" class="tab-btn px-3.5 py-1.5 rounded-lg bg-pink-900/40 text-pink-300 hover:bg-pink-800/60 text-sm border border-pink-700/50 transition-all font-semibold">💖 心頭好 (愛心作品)</button>
+    <button onclick="filterTab('HEART')" class="tab-btn px-3.5 py-1.5 rounded-lg bg-pink-900/40 text-pink-300 hover:bg-pink-800/60 text-sm border border-pink-700/50 transition-all font-semibold">💖 心頭好</button>
+    
+    <!-- 觀看狀態分區 -->
     <button onclick="filterTab('正在看')" class="tab-btn px-3.5 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 text-sm transition-all">📺 正在看</button>
     <button onclick="filterTab('比較想看')" class="tab-btn px-3.5 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 text-sm transition-all">🔥 比較想看</button>
     <button onclick="filterTab('想看')" class="tab-btn px-3.5 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 text-sm transition-all">📌 想看</button>
     <button onclick="filterTab('看完結局')" class="tab-btn px-3.5 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 text-sm transition-all">🎉 看完結局</button>
-    <button onclick="filterTab('看完')" class="tab-btn px-3.5 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 text-sm transition-all">⏳ 看完 (等下一季/就到這裡)</button>
-    <button onclick="filterTab('一半不看')" class="tab-btn px-3.5 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 text-sm transition-all">⏸️ 一半不看的</button>
+    <button onclick="filterTab('看完')" class="tab-btn px-3.5 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 text-sm transition-all">⏳ 看完 (等下一季)</button>
+    <button onclick="filterTab('一半不看')" class="tab-btn px-3.5 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 text-sm transition-all">⏸️ 一半不看</button>
+
+    <!-- 6 大主分區 -->
+    <button onclick="filterTab('1.動漫')" class="tab-btn px-3.5 py-1.5 rounded-lg bg-indigo-950 text-indigo-300 hover:bg-indigo-900 text-sm transition-all">1. 動漫</button>
+    <button onclick="filterTab('2.漫畫分區')" class="tab-btn px-3.5 py-1.5 rounded-lg bg-indigo-950 text-indigo-300 hover:bg-indigo-900 text-sm transition-all">2. 漫畫</button>
+    <button onclick="filterTab('3.輕小說分區')" class="tab-btn px-3.5 py-1.5 rounded-lg bg-indigo-950 text-indigo-300 hover:bg-indigo-900 text-sm transition-all">3. 輕小說</button>
+    <button onclick="filterTab('4.書')" class="tab-btn px-3.5 py-1.5 rounded-lg bg-indigo-950 text-indigo-300 hover:bg-indigo-900 text-sm transition-all">4. 書籍</button>
+    <button onclick="filterTab('5.影集')" class="tab-btn px-3.5 py-1.5 rounded-lg bg-indigo-950 text-indigo-300 hover:bg-indigo-900 text-sm transition-all">5. 影集</button>
+    <button onclick="filterTab('6.綜藝')" class="tab-btn px-3.5 py-1.5 rounded-lg bg-indigo-950 text-indigo-300 hover:bg-indigo-900 text-sm transition-all">6. 綜藝</button>
   </div>
 
   <!-- 統計數據 -->
@@ -46,8 +56,8 @@
   <div id="cardGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
 
   <script>
-    // ⚠️ 請替換為你的 Google 試算表 CSV 連結 (發布到 Web 取得的 CSV 網址)
-    const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTxFXMuSviPYQBVdCvuMtSwP18lI_he7qtN_4bL9j_BsZnismoC-nEuH-txAtFaog/pub?output=csv';
+    // ⚠️ 請替換為你的新 Google 試算表 CSV 連結
+    const csvUrl = 'YOUR_NEW_GOOGLE_SHEET_CSV_URL';
 
     let allData = [];
     let currentFilter = 'ALL';
@@ -78,31 +88,29 @@
       grid.innerHTML = '';
 
       const filtered = allData.filter(item => {
-        // 相容不同欄位命名
         const title = item['作品名稱'] || item['子狀態/細項'] || item['名稱'] || item['類別'] || '';
         const subStatus = item['狀態/分區'] || item['子狀態/細項'] || item['狀態'] || '';
         const mainCat = item['主分區'] || item['類別'] || '';
         const note = item['進度/備註'] || item['備註'] || '';
         const date = item['看完或記錄日期/備註'] || '';
 
-        // 愛心標記判斷
         const isHeart = title.includes('💓') || note.includes('💓') || date.includes('💓') || subStatus.includes('💓');
 
-        // 分頁篩選條件
         let matchFilter = false;
         if (currentFilter === 'ALL') {
           matchFilter = true;
         } else if (currentFilter === 'HEART') {
           matchFilter = isHeart;
         } else {
+          // 支援主分區與子狀態的模糊比對篩選
           matchFilter = subStatus.includes(currentFilter) || mainCat.includes(currentFilter);
         }
 
-        // 關鍵字搜尋條件
         const matchSearch = title.toLowerCase().includes(search) || 
                             note.toLowerCase().includes(search) || 
                             subStatus.toLowerCase().includes(search) ||
-                            date.toLowerCase().includes(search);
+                            date.toLowerCase().includes(search) ||
+                            mainCat.toLowerCase().includes(search);
 
         return matchFilter && matchSearch;
       });
@@ -138,9 +146,10 @@
             <h3 class="font-bold text-lg text-slate-100 mb-2 leading-snug">${title}</h3>
             ${note ? `<p class="text-sm text-slate-400 mb-3 leading-relaxed">${note}</p>` : ''}
           </div>
-          <div class="text-xs text-slate-500 pt-2 border-t border-slate-700/40 flex justify-between items-center mt-2">
-            <span>${mainCat}</span>
-            <span class="text-slate-400">${date}</span>
+          <div class="text-xs pt-2 border-t border-slate-700/40 flex justify-between items-center mt-2">
+            <span class="text-slate-400 font-medium">${mainCat}</span>
+            <!-- 顯眼的日期與備註標示 -->
+            <span class="text-cyan-400 font-bold tracking-wide">${date}</span>
           </div>
         `;
         grid.appendChild(card);
