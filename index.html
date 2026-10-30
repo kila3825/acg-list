@@ -25,7 +25,7 @@
            class="w-full md:w-80 px-4 py-2 rounded-xl bg-slate-800 border border-slate-700 text-white focus:outline-none focus:border-purple-500 shadow-inner">
   </header>
 
-  <!-- 分類篩選列（包含 6 大主分區與狀態/心頭好） -->
+  <!-- 分類篩選列 -->
   <div id="tabs" class="flex flex-wrap gap-2 mb-6 border-b border-slate-800 pb-4">
     <button onclick="filterTab('ALL')" class="tab-btn tab-active px-3.5 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 text-sm transition-all">🌟 全部</button>
     <button onclick="filterTab('HEART')" class="tab-btn px-3.5 py-1.5 rounded-lg bg-pink-900/40 text-pink-300 hover:bg-pink-800/60 text-sm border border-pink-700/50 transition-all font-semibold">💖 心頭好</button>
@@ -56,7 +56,7 @@
   <div id="cardGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"></div>
 
   <script>
-    // ⚠️ 請替換為你的新 Google 試算表 CSV 連結
+    // ⚠️ 記得將此處替換為你最新的 Google 試算表 CSV 連結
     const csvUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTxFXMuSviPYQBVdCvuMtSwP18lI_he7qtN_4bL9j_BsZnismoC-nEuH-txAtFaog/pub?output=csv';
 
     let allData = [];
@@ -102,7 +102,6 @@
         } else if (currentFilter === 'HEART') {
           matchFilter = isHeart;
         } else {
-          // 支援主分區與子狀態的模糊比對篩選
           matchFilter = subStatus.includes(currentFilter) || mainCat.includes(currentFilter);
         }
 
@@ -137,18 +136,25 @@
           ? `<span class="text-xs px-2 py-0.5 rounded bg-purple-900/60 text-purple-300 font-medium border border-purple-700/40">${subStatus}</span>` 
           : '';
 
+        // 產生 Google 搜尋的超連結 URL（自動將作品名稱進行編碼）
+        const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(title)}`;
+
         card.innerHTML = `
           <div>
             <div class="flex justify-between items-start mb-2 gap-2">
               <div class="flex flex-wrap gap-1">${tagHtml}</div>
               ${isHeart ? '<span class="text-pink-400 text-base flex-shrink-0">💓</span>' : ''}
             </div>
-            <h3 class="font-bold text-lg text-slate-100 mb-2 leading-snug">${title}</h3>
+            <!-- 點擊作品名稱時，會以新分頁開啟 Google 搜尋該名稱 -->
+            <h3 class="font-bold text-lg mb-2 leading-snug">
+              <a href="${searchUrl}" target="_blank" class="text-slate-100 hover:text-purple-400 hover:underline transition-colors flex items-center gap-1">
+                ${title} <span class="text-xs text-slate-500">🔍</span>
+              </a>
+            </h3>
             ${note ? `<p class="text-sm text-slate-400 mb-3 leading-relaxed">${note}</p>` : ''}
           </div>
           <div class="text-xs pt-2 border-t border-slate-700/40 flex justify-between items-center mt-2">
             <span class="text-slate-400 font-medium">${mainCat}</span>
-            <!-- 顯眼的日期與備註標示 -->
             <span class="text-cyan-400 font-bold tracking-wide">${date}</span>
           </div>
         `;
